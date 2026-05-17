@@ -1,4 +1,4 @@
-import React from 'react';
+// import React from 'react';
 import RainSafeMap from './pages/Mapa/mapa';
 
 function App() {

@@ -1,8 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import logoRainSafe from '../../assets/RainSafeLogo.svg';
+
+import { SensorReadout } from '../../interfaces/SensorReadout';
+import { SensorService } from '../../services/SensorService';
+
 
 const sensorIcon = new L.Icon({
   iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
@@ -16,37 +20,64 @@ const sensorIcon = new L.Icon({
 
 const FATEC_ITAQUERA_COORDS = [-23.5450592, -46.4680615];
 
+
+const SENSOR_REGISTRY = [
+  { sensor_id: "ESP32_WOKWI_AUTO", nome: "Sensor Principal - Fatec Itaquera", lat: -23.5450592, lng: -46.4680615 },
+  { sensor_id: "ITAQUERA_PRACA_02", nome: "Sensor Secundário - Praça", lat: -23.5420000, lng: -46.4650000 }
+];
+
 const RainSafeMap = () => {
-  const [sensores, setSensors] = useState([
-    {
-      sensor_id: "FATEC_ITAQUERA_01",
-      nome: "Sensor Principal - Fatec",
-      lat: -23.5450592,
-      lng: -46.4680615,
-      temperatura: 24.5,
-      umidade: 88.0,
-      status_chuva: "Alta Probabilidade",
-      timestamp: new Date().toISOString()
-    },
-    {
-      sensor_id: "ITAQUERA_PRACA_02",
-      nome: "Sensor Secundário - Praça",
-      lat: -23.5420000,
-      lng: -46.4650000,
-      temperatura: 26.0,
-      umidade: 55.0,
-      status_chuva: "Céu Limpo",
-      timestamp: new Date().toISOString()
-    }
-  ]);
+  
+  // const [sensores, setSensors] = useState([
+  //   {
+  //     sensor_id: "FATEC_ITAQUERA_01",
+  //     nome: "Sensor Principal - Fatec",
+  //     lat: -23.5450592,
+  //     lng: -46.4680615,
+  //     temperatura: 24.5,
+  //     umidade: 88.0,
+  //     status_chuva: "Alta Probabilidade",
+  //     timestamp: new Date().toISOString()
+  //   },
+  //   {
+  //     sensor_id: "ITAQUERA_PRACA_02",
+  //     nome: "Sensor Secundário - Praça",
+  //     lat: -23.5420000,
+  //     lng: -46.4650000,
+  //     temperatura: 26.0,
+  //     umidade: 55.0,
+  //     status_chuva: "Céu Limpo",
+  //     timestamp: new Date().toISOString()
+  //   }
+  // ]);
+  const sensorService = useMemo(() => new SensorService(), []);
+  
+  // const [sensores, setSensors] = useState<SensorReadout[]>([]);
+  const [sensores, setSensors] = useState(SENSOR_REGISTRY.map(s => ({
+    ...s,
+    temperatura: 0,
+    umidade: 0,
+    status_chuva: "Carregando...",
+    timestamp: new Date()
+  })));
 
+  
   useEffect(() => {
-    /* ==========================================================
-       Integração Backend (MQTT ou API) entra aqui
-    ========================================================== */
-  }, []);
+    const carregarDados = async () => {
+      try {
+        const historico = await sensorService.getHistory();
+        setSensors(historico); 
+      } catch (error) {
+        console.error("Erro na comunicação com a API RainSafe:", error);
+      }
+    };
 
-  // --- LÓGICA DE CORES DINÂMICAS ---
+    carregarDados();
+    const interval = setInterval(carregarDados, 10000); 
+    
+    return () => clearInterval(interval);
+  }, [sensorService]);
+
   const getHumidityColor = (umidade) => {
     if (umidade >= 80) return "text-red-600 font-bold";
     if (umidade >= 65) return "text-orange-500 font-semibold";
@@ -60,8 +91,6 @@ const RainSafeMap = () => {
     return "text-green-600 font-medium";
   };
 
-  // --- LÓGICA DE ALERTA GLOBAL ---
-  // Verifica se existe ALGUM sensor com umidade alta E status de chuva
   const isCriticalAlertActive = sensores.some(
     (s) => s.umidade >= 80 && (s.status_chuva.includes("Alta") || s.status_chuva.includes("Chuva"))
   );
@@ -69,7 +98,6 @@ const RainSafeMap = () => {
   return (
     <div className="flex flex-col h-screen bg-[#f4f7f9] font-sans overflow-hidden">
       
-      {/* HEADER */}
       <header className="bg-[#0a2f55] text-white p-4 shadow-lg z-20 flex justify-between items-center relative">
         <div className="flex items-center gap-3">
           <img 
@@ -86,10 +114,8 @@ const RainSafeMap = () => {
         </div>
       </header>
 
-      {/* ÁREA DO MAPA */}
       <main className="flex-1 relative z-0">
         
-        {/* BANNER DE AVISO DE CHUVA (Flutuante) */}
         {isCriticalAlertActive && (
           <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-[1000] w-[90%] md:w-[60%]">
             <div className="bg-red-600/90 backdrop-blur-sm text-white p-4 rounded-lg shadow-2xl border-l-8 border-red-900 flex items-center justify-between">
@@ -105,7 +131,6 @@ const RainSafeMap = () => {
           </div>
         )}
 
-        {/* PAINEL DE RESUMO */}
         <div className="absolute bottom-6 left-6 z-[1000] bg-white/80 backdrop-blur-md p-4 rounded-xl shadow-xl border border-white/50 w-64 pointer-events-none hidden md:block">
           <h3 className="text-[#0a2f55] font-bold text-lg mb-2 border-b border-gray-300/50 pb-1">Visão Geral</h3>
           <div className="flex justify-between items-center text-sm text-gray-700 mb-1">
@@ -118,7 +143,6 @@ const RainSafeMap = () => {
           </div>
         </div>
 
-        {/* MAPA */}
         <MapContainer 
           center={FATEC_ITAQUERA_COORDS} 
           zoom={14} 
@@ -169,6 +193,7 @@ const RainSafeMap = () => {
                     ID: {sensor.sensor_id}
                   </p>
                 </div>
+                <div>Total de sensores: {sensores.length}</div>
               </Popup>
             </Marker>
           ))}
