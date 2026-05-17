@@ -1,5 +1,5 @@
 // import React from 'react';
-import RainSafeMap from './pages/Mapa/mapa';
+import RainSafeMap from './pages/Mapa/mapa.tsx';
 
 function App() {
   return (

@@ -3,12 +3,12 @@ import axios, { type AxiosInstance } from 'axios';
 class ApiClient {
   private static instance: AxiosInstance;
 
-  private constructor() {} // Impede instanciação externa
+  private constructor() {}
 
   public static getInstance(): AxiosInstance {
     if (!ApiClient.instance) {
       ApiClient.instance = axios.create({
-        baseURL: import.meta.env.VITE_BACK_END_URL || 'https://backend-rainsafe.onrender.com',
+        baseURL: import.meta.env.BACK_END_URL || 'http://localhost:3000',
         headers: {
           'Content-Type': 'application/json',
         },

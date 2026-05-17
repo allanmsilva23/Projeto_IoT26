@@ -4,7 +4,7 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import logoRainSafe from '../../assets/RainSafeLogo.svg';
 
-import { SensorReadout } from '../../interfaces/SensorReadout';
+import { type SensorReadout, type Sensor } from '../../interfaces/SensorReadout';
 import { SensorService } from '../../services/SensorService';
 
 
@@ -18,7 +18,7 @@ const sensorIcon = new L.Icon({
   shadowSize: [41, 41]
 });
 
-const FATEC_ITAQUERA_COORDS = [-23.5450592, -46.4680615];
+const FATEC_ITAQUERA_COORDS: [number, number] = [-23.5450592, -46.4680615];
 
 
 const SENSOR_REGISTRY = [
@@ -27,7 +27,7 @@ const SENSOR_REGISTRY = [
 ];
 
 const RainSafeMap = () => {
-  
+  const [bannerDismissed, setBannerDismissed] = useState(false);
   // const [sensores, setSensors] = useState([
   //   {
   //     sensor_id: "FATEC_ITAQUERA_01",
@@ -53,7 +53,7 @@ const RainSafeMap = () => {
   const sensorService = useMemo(() => new SensorService(), []);
   
   // const [sensores, setSensors] = useState<SensorReadout[]>([]);
-  const [sensores, setSensors] = useState(SENSOR_REGISTRY.map(s => ({
+  const [sensores, setSensors] = useState<Sensor[]>(SENSOR_REGISTRY.map(s => ({
     ...s,
     temperatura: 0,
     umidade: 0,
@@ -66,25 +66,42 @@ const RainSafeMap = () => {
     const carregarDados = async () => {
       try {
         const historico = await sensorService.getHistory();
-        setSensors(historico); 
+        setSensors(prev => prev.map(sensorFixo => {
+          const log = historico.find(l => l.sensor_id === sensorFixo.sensor_id);
+          
+          if (log) {
+            return { 
+              ...sensorFixo, 
+              ...log,
+              timestamp: new Date(log.timestamp) 
+            };
+          }
+          return sensorFixo;
+        }));
+        const currentlyCritical = historico.some(
+          (s) => s.umidade >= 80 && (s.status_chuva.includes("Alta") || s.status_chuva.includes("Chuva"))
+        );
+
+        if (!currentlyCritical) {
+          setBannerDismissed(false);
+        }
       } catch (error) {
         console.error("Erro na comunicação com a API RainSafe:", error);
       }
     };
 
     carregarDados();
-    const interval = setInterval(carregarDados, 10000); 
-    
+    const interval = setInterval(carregarDados, 10000);    
     return () => clearInterval(interval);
   }, [sensorService]);
 
-  const getHumidityColor = (umidade) => {
+  const getHumidityColor = (umidade:number) => {
     if (umidade >= 80) return "text-red-600 font-bold";
     if (umidade >= 65) return "text-orange-500 font-semibold";
     return "text-green-600 font-medium";
   };
 
-  const getStatusColor = (status) => {
+  const getStatusColor = (status:string) => {
     const s = status.toLowerCase();
     if (s.includes("alta") || s.includes("chuva") || s.includes("alagamento")) return "text-red-600 font-bold";
     if (s.includes("moderada") || s.includes("atenção")) return "text-orange-500 font-semibold";
@@ -116,7 +133,7 @@ const RainSafeMap = () => {
 
       <main className="flex-1 relative z-0">
         
-        {isCriticalAlertActive && (
+        {isCriticalAlertActive && !bannerDismissed &&(
           <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-[1000] w-[90%] md:w-[60%]">
             <div className="bg-red-600/90 backdrop-blur-sm text-white p-4 rounded-lg shadow-2xl border-l-8 border-red-900 flex items-center justify-between">
               <div>
@@ -127,6 +144,15 @@ const RainSafeMap = () => {
                   Umidade crítica detectada na região. Risco elevado de alagamento nos status em vermelho.
                 </p>
               </div>
+              <button 
+                onClick={() => setBannerDismissed(true)}
+                className="ml-4 p-2 hover:bg-white/20 rounded-full transition-colors"
+                title="Fechar Alerta"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
             </div>
           </div>
         )}
@@ -186,6 +212,10 @@ const RainSafeMap = () => {
                       <span className={`text-sm px-2 py-1 rounded bg-white border shadow-sm inline-block w-fit ${getStatusColor(sensor.status_chuva)}`}>
                         {sensor.status_chuva}
                       </span>
+                      <p className="text-[10px] text-gray-400 mt-3 flex justify-between">
+                        <span>ID: {sensor.sensor_id}</span>
+                        <span>Atualizado: {sensor.timestamp.toLocaleTimeString()}</span>
+                      </p>
                     </div>
                   </div>
                   
