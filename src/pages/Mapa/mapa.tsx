@@ -23,7 +23,8 @@ const FATEC_ITAQUERA_COORDS: [number, number] = [-23.5450592, -46.4680615];
 
 const SENSOR_REGISTRY = [
   { sensor_id: "ESP32_WOKWI_AUTO", nome: "Sensor Principal - Fatec Itaquera", lat: -23.5450592, lng: -46.4680615 },
-  { sensor_id: "ITAQUERA_PRACA_02", nome: "Sensor Secundário - Praça", lat: -23.5420000, lng: -46.4650000 }
+  { sensor_id: "ESP32_WOKWI_2", nome: "Sensor Secundário - Praça", lat: -23.5420000, lng: -46.4650000 },
+  { sensor_id: "ESP32_WOKWI_3", nome: "Sensor Terciario - Praça", lat: -23.5450602, lng: -46.4680715 }
 ];
 
 const RainSafeMap = () => {
