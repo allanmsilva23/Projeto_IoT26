@@ -8,7 +8,7 @@ class ApiClient {
   public static getInstance(): AxiosInstance {
     if (!ApiClient.instance) {
       ApiClient.instance = axios.create({
-        baseURL: import.meta.env.BACK_END_URL || 'http://localhost:3000',
+        baseURL: import.meta.env.BACK_END_URL || 'https://backend-rainsafe.onrender.com',
         headers: {
           'Content-Type': 'application/json',
         },
