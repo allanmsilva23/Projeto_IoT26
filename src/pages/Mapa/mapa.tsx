@@ -189,7 +189,7 @@ const RainSafeMap = () => {
   );
 
   return (
-    <div className="flex flex-col h-screen bg-[#f4f7f9] font-sans overflow-hidden">
+    <div className="flex flex-col h-[100dvh] bg-[#f4f7f9] font-sans overflow-hidden">
       
       <Navbar 
         onOpenModal={() => setIsModalOpen(true)}
@@ -199,41 +199,47 @@ const RainSafeMap = () => {
       />
 
       <main className="flex-1 relative z-0">
-        
-        {isCriticalAlertActive && !bannerDismissed && (
-          <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-[1000] w-[90%] md:w-[60%]">
-            <div className="bg-red-600/90 backdrop-blur-sm text-white p-4 rounded-lg shadow-2xl border-l-8 border-red-900 flex items-center justify-between">
-              <div>
-                <h2 className="text-xl font-bold uppercase tracking-wide flex items-center gap-2">
-                  <span className="text-2xl animate-bounce">🚨</span> Alerta de Chuva Intensa
-                </h2>
-                <p className="text-sm mt-1 font-medium text-red-100">
-                  Umidade crítica detectada na região. Risco elevado de alagamento.
-                </p>
-              </div>
-              <button 
-                onClick={() => setBannerDismissed(true)}
-                className="ml-4 p-2 hover:bg-white/20 rounded-full transition-colors"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-          </div>
-        )}
 
-        <div className="absolute bottom-6 left-6 z-[1000] bg-white/80 backdrop-blur-md p-4 rounded-xl shadow-xl border border-white/50 w-64 hidden md:block pointer-events-none">
-          <h3 className="text-[#0a2f55] font-bold text-lg mb-2 border-b border-gray-300/50 pb-1">Visão Geral</h3>
-          <div className="flex justify-between items-center text-sm text-gray-700 mb-1">
-            <span>Sensores Ativos:</span>
-            <span className="font-bold text-[#0a2f55]">{sensores.length}</span>
-          </div>
-          <div className="flex justify-between items-center text-sm text-gray-700">
-            <span>Zonas de Risco:</span>
-            <span className="font-bold text-red-600">{sensores.filter(s => s.umidade >= 80).length}</span>
-          </div>
-        </div>
+{isCriticalAlertActive && !bannerDismissed && (
+  <div className="absolute top-2 md:top-4 left-1/2 transform -translate-x-1/2 z-[1000] w-[95%] sm:w-[90%] md:w-[60%]">
+    <div className="bg-red-600/90 backdrop-blur-sm text-white p-3 md:p-4 rounded-lg shadow-2xl border-l-4 md:border-l-8 border-red-900 flex items-center justify-between gap-3">
+      <div className="flex-1">
+        <h2 className="text-sm md:text-xl font-bold uppercase tracking-wide flex items-center gap-1 md:gap-2">
+          <span className="text-lg md:text-2xl animate-bounce">🚨</span> Alerta de Chuva
+        </h2>
+        <p className="text-xs md:text-sm mt-1 font-medium text-red-100 leading-tight">
+          Umidade crítica na região. Risco de alagamento.
+        </p>
+      </div>
+      <button 
+        onClick={() => setBannerDismissed(true)}
+        className="p-1 md:p-2 hover:bg-white/20 rounded-full transition-colors flex-shrink-0"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 md:h-6 md:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+  </div>
+)}
+
+<div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 md:translate-x-0 md:left-6 md:bottom-6 z-[1000] bg-white/90 md:bg-white/80 backdrop-blur-md p-2 md:p-4 rounded-xl shadow-xl border border-white/50 w-[90%] md:w-64 pointer-events-none flex justify-around md:flex-col items-center md:items-stretch">
+  <h3 className="text-[#0a2f55] font-bold text-lg mb-2 border-b border-gray-300/50 pb-1 hidden md:block">Visão Geral</h3>
+  
+  <div className="flex justify-between items-center text-xs md:text-sm text-gray-700 md:mb-1 gap-2">
+    <span className="hidden md:inline">Sensores Ativos:</span>
+    <span className="md:hidden">Ativos:</span>
+    <span className="font-bold text-[#0a2f55]">{sensores.length}</span>
+  </div>
+
+  <div className="w-px h-4 bg-gray-300 md:hidden"></div>
+
+  <div className="flex justify-between items-center text-xs md:text-sm text-gray-700 gap-2">
+    <span className="hidden md:inline">Zonas de Risco:</span>
+    <span className="md:hidden">Risco:</span>
+    <span className="font-bold text-red-600">{sensores.filter(s => s.umidade >= 80).length}</span>
+  </div>
+</div>
 
         <MapContainer 
           center={FATEC_ITAQUERA_COORDS} 
@@ -250,7 +256,7 @@ const RainSafeMap = () => {
               icon={sensorIcon}
             >
               <Popup className="custom-popup">
-                <div className="p-2 min-w-[220px]">
+                <div className="p-2 min-w-[180px] sm:min-w-[220px] max-w-[260px] sm:max-w-none">
                   <h3 className="font-extrabold text-[#0a2f55] border-b-2 border-[#0a2f55]/10 pb-2 mb-3 text-base flex justify-between items-center">
                     {sensor.nome}
                     {sensor.umidade >= 80 && <span className="animate-pulse text-xl">⚠️</span>}
